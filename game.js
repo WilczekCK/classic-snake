@@ -14,6 +14,32 @@ settings = {
             this.scoreCounter.font = '30px Roboto';
             this.scoreCounter.fillStyle = 'black';
             this.scoreCounter.fillText('SCORE: '+settings.snake.stats.points, settings.gameContainerSize.width-795, settings.gameContainerSize.height+20)
+        },
+        edgeOfScreen: {
+            horizontal: function(){
+                if(settings.snake.position.x >= settings.gameContainerSize.width || settings.snake.position.x == -settings.snake.stats.width){
+                    switch(settings.snake.position.x){
+                        case settings.gameContainerSize.width:
+                            settings.snake.position.x = -25;
+                            break;
+                        case -25:
+                            settings.snake.position.x = settings.gameContainerSize.width;
+                            break;
+                    }
+                }
+            },
+            vertical: function(){
+                if(settings.snake.position.y >= settings.gameContainerSize.height || settings.snake.position.y == -settings.snake.stats.height){
+                    switch(settings.snake.position.y){
+                        case -25:
+                            settings.snake.position.y = settings.gameContainerSize.height+25;
+                            break;
+                        case settings.gameContainerSize.height+25:
+                            settings.snake.position.y = -25;
+                            break;
+                    }
+                }
+            }
         }
     },
 
@@ -106,6 +132,8 @@ settings = {
 
                 if(settings.snake.actualDirection){
                     settings.score.checkIfScored();
+                    settings.gameplay.edgeOfScreen.horizontal();
+                    settings.gameplay.edgeOfScreen.vertical();
                     settings.snake.player.clearRect(settings.snake.position.x, settings.snake.position.y, settings.snake.stats.width, settings.snake.stats.height)
                     
                     switch(settings.snake.actualDirection){
