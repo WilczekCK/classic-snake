@@ -35,7 +35,7 @@ settings = {
                             settings.snake.position.y = settings.gameContainerSize.height+25;
                             break;
                         case settings.gameContainerSize.height+25:
-                            settings.snake.position.y = -25;
+                            settings.snake.position.y = 0;
                             break;
                     }
                 }
@@ -61,6 +61,32 @@ settings = {
             this.player.closePath();
             this.player.fill();
         },
+    },
+
+    tail: {
+        object: {},
+        positions: [],
+        lastSnakePosition:function(){
+            if(settings.snake){
+                this.positions.unshift([settings.snake.position.x, settings.snake.position.y])
+                this.positions.length = settings.snake.stats.points;
+                return [settings.snake.position.x, settings.snake.position.y]
+            }
+        },
+        draw: function(){
+            if(settings.snake.stats.points > 0){
+                this.clear();
+                this.object.beginPath();
+                this.object.rect(this.lastSnakePosition()[0], this.lastSnakePosition()[1], settings.snake.stats.width, settings.snake.stats.height)
+                this.object.closePath();
+                this.object.fill();
+            }
+        },
+        clear: function(){
+            if(this.positions[this.positions.length-1]){
+                this.object.clearRect(this.positions[this.positions.length-1][0], this.positions[this.positions.length-1][1], settings.snake.stats.height, settings.snake.stats.width)
+            }
+        }
     },
     
     score: {
@@ -89,8 +115,7 @@ settings = {
                 this.goal();
                 this.clear();
                 this.draw();
-            }
-            
+            }  
         },
         goal: function() {
             settings.snake.stats.points += 1
@@ -119,12 +144,13 @@ settings = {
     },
 
     init: function(){
-        const fps = 60;
+        const fps = 120;
         setTimeout(function(){
 
             const canvas = settings.gameContainer;
             settings.snake.player = canvas.getContext("2d");
             settings.score.pixel = canvas.getContext("2d");
+            settings.tail.object = canvas.getContext("2d");
             settings.gameplay.scoreCounter = canvas.getContext("2d");
             
             settings.score.draw();
@@ -135,7 +161,8 @@ settings = {
                     settings.gameplay.edgeOfScreen.horizontal();
                     settings.gameplay.edgeOfScreen.vertical();
                     settings.snake.player.clearRect(settings.snake.position.x, settings.snake.position.y, settings.snake.stats.width, settings.snake.stats.height)
-                    
+
+                    settings.tail.draw();
                     switch(settings.snake.actualDirection){
                         case 'ArrowLeft':
                             settings.snake.position.x -= 25;
