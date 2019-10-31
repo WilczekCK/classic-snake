@@ -29,10 +29,10 @@ settings = {
             horizontal: function () {
                 if (settings.snake.position.x >= settings.gameContainerSize.width || settings.snake.position.x == -settings.snake.stats.width) {
                     switch (settings.snake.position.x) {
-                        case settings.gameContainerSize.width:
+                        case settings.gameContainerSize.width + settings.snake.stats.height:
                             settings.snake.position.x = 0;
                             break;
-                        case -25:
+                        case -settings.snake.stats.width:
                             settings.snake.position.x = settings.gameContainerSize.width;
                             break;
                     }
@@ -42,9 +42,9 @@ settings = {
                 if (settings.snake.position.y >= settings.gameContainerSize.height || settings.snake.position.y == -settings.snake.stats.height) {
                     switch (settings.snake.position.y) {
                         case -settings.snake.stats.height:
-                            settings.snake.position.y = settings.gameContainerSize.height + 25;
+                            settings.snake.position.y = settings.gameContainerSize.height + settings.snake.stats.height;
                             break;
-                        case settings.gameContainerSize.height + 25:
+                        case settings.gameContainerSize.height + settings.snake.stats.height:
                             settings.snake.position.y = 0;
                             break;
                     }
@@ -55,6 +55,9 @@ settings = {
                 this.vertical();
             },
         },
+        failed: function() {
+            console.log('failed')
+        }
     },
 
     snake: {
@@ -82,37 +85,34 @@ settings = {
 
     tail: {
         object: {},
-        positions: [],
+        positions: ["0,0"],
         lastSnakePosition: function () {
             if (settings.snake) {
-                this.positions.unshift([settings.snake.position.x, settings.snake.position.y])
+                this.positions.unshift(`${settings.snake.position.x}, ${settings.snake.position.y}`)
                 this.positions.length = settings.snake.stats.points;
-                return [settings.snake.position.x, settings.snake.position.y]
+                return {'x': settings.snake.position.x, 'y':settings.snake.position.y}
             }
         },
         draw: function () {
-            if (settings.snake.stats.points > 1) {
+            if (settings.snake.stats.points) {
                 this.clear();
                 this.object.beginPath();
-                this.object.rect(this.lastSnakePosition()[0], this.lastSnakePosition()[1], settings.snake.stats.width, settings.snake.stats.height)
+                this.object.rect(this.lastSnakePosition().x, this.lastSnakePosition().y, settings.snake.stats.width, settings.snake.stats.height)
                 this.object.closePath();
                 this.object.fill();
             }
         },
         clear: function () {
-            var lastTabEl = this.positions[this.positions.length - 1]
+            const lastTabEl = this.positions[this.positions.length - 1].split(", ");
+
             if (lastTabEl) {
-                //0 is x
-                //1 is y
                 this.object.clearRect(lastTabEl[0], lastTabEl[1], settings.snake.stats.height, settings.snake.stats.width)
             }
         },
         collision: function (){
-            const simplified = [settings.snake.actualPosition.x, settings.snake.actualPosition.y]
-            if(settings.tail.positions.includes(simplified)){
-                console.log('yup')
-                return new Error();
-            }
+            if(this.positions.indexOf(`${settings.snake.position.x}, ${settings.snake.position.y}`, 3) > -1) {
+                settings.gameplay.failed();
+            };
         }
     },
 
@@ -188,9 +188,11 @@ settings = {
 
                 settings.gameplay.drawScoreCounter();
                 settings.gameplay.edgeOfScreen.check();
-
+                
                 settings.snake.clear();                
+                
                 settings.tail.draw();
+                settings.tail.collision();
 
                 switch (settings.snake.actualDirection) {
                     case 'ArrowLeft':
