@@ -5,17 +5,17 @@ settings = {
     gameContainer: document.getElementById('gameScreen'),
     gameContainerSize: {
         width: 800,
-        height: 575
+        height: 600
     },
     allowedKeys: ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'],
     gameplay: {
         startScreen: {},
         scoreCounter: {},
         drawScoreCounter: function () {
-            this.scoreCounter.clearRect(0, settings.gameContainerSize.height, settings.gameContainerSize.width, settings.gameContainerSize.height + 25)
+            this.scoreCounter.clearRect(0, settings.gameContainerSize.height-25, 70, settings.gameContainerSize.height)
             this.scoreCounter.font = '10px Arial';
             this.scoreCounter.fillStyle = 'black';
-            this.scoreCounter.fillText('SCORE: ' + settings.snake.stats.points + '00', settings.gameContainerSize.width - settings.gameContainerSize.width + 5 , settings.gameContainerSize.height + 20)
+            this.scoreCounter.fillText('SCORE: ' + settings.snake.stats.points + '0', settings.gameContainerSize.width - settings.gameContainerSize.width + 5 , settings.gameContainerSize.height - 5)
         },
         changeDirections: function (key) {
             if (key == 'ArrowLeft' && settings.snake.actualDirection == 'ArrowRight'
@@ -145,20 +145,26 @@ settings = {
             y: {}
         },
         size: {
-            height: 3.5,
-            width: 3.5,
+            height: 5,
+            width: 5,
         },
         rollPosition: function () {
-            const width = Math.floor(Math.random() * (settings.gameContainerSize.width - 0)) + 0;
-            const height = Math.floor(Math.random() * (settings.gameContainerSize.height - 0)) + 0;
+            const width = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.width-25) - 0)/25)*25) + 0 )
+            const height = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.height-25) - 0)/25)*25) + 0 )
 
             return [width, height]
         },
+        checkIfSnakeIsThere: function(x, y){
+            if (settings.tail.positions.indexOf(`${x}, ${y}`) > -1) {
+                console.log('reroll')
+                return true;
+            };
+        },
         checkIfScored: function () {
             if (this.actualPosition.x < settings.snake.position.x + settings.snake.stats.width &&
-                this.actualPosition.x + this.size.width > settings.snake.position.x &&
+                this.actualPosition.x + 4*this.size.width > settings.snake.position.x &&
                 this.actualPosition.y < settings.snake.position.y + settings.snake.stats.height &&
-                this.actualPosition.y + this.size.height > settings.snake.position.y) {
+                this.actualPosition.y + 4*this.size.height > settings.snake.position.y) {
 
                 this.goal();
                 this.clear();
@@ -170,11 +176,11 @@ settings = {
             settings.gameplay.drawScoreCounter();
         },
         clear: function () {
-            this.pixel.clearRect(this.actualPosition.x - this.size.width, this.actualPosition.y - this.size.height, this.size.width + 4, this.size.height + 4)
+            this.pixel.clearRect(this.actualPosition.x - 2*this.size.width, this.actualPosition.y - 2*this.size.height, 4*this.size.width, 4*this.size.height)
         },
         draw: function () {
             if (this.pixelPoint == settings.snake.stats.points) return 0;
-
+            
             this.pixelPoint++;
             const roll = {
                 x: this.rollPosition()[0],
@@ -183,6 +189,9 @@ settings = {
 
             this.actualPosition.x = roll.x
             this.actualPosition.y = roll.y
+
+            console.log(this.actualPosition)
+            if (this.checkIfSnakeIsThere(this.actualPosition.x, this.actualPosition.y )) return 0;
 
             this.pixel.beginPath();
             this.pixel.rect(roll.x+this.size.height, roll.y, this.size.height, this.size.width)
