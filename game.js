@@ -1,7 +1,7 @@
 var settings = settings | {};
 settings = {
     framelimit: 120,
-    gameStatus : '',
+    gameStatus: '',
     gameContainer: document.getElementById('gameScreen'),
     gameContainerSize: {
         width: 800,
@@ -12,28 +12,58 @@ settings = {
         startScreen: {},
         scoreCounter: {},
         drawScoreCounter: function () {
-            this.scoreCounter.clearRect(0, settings.gameContainerSize.height-25, 70, settings.gameContainerSize.height)
+            this.scoreCounter.clearRect(0, settings.gameContainerSize.height - 25, 70, settings.gameContainerSize.height)
             this.scoreCounter.font = '10px Arial';
             this.scoreCounter.fillStyle = 'black';
-            this.scoreCounter.fillText('SCORE: ' + settings.snake.stats.points + '0', settings.gameContainerSize.width - settings.gameContainerSize.width + 5 , settings.gameContainerSize.height - 5)
+            this.scoreCounter.fillText('SCORE: ' + settings.snake.stats.points + '0', settings.gameContainerSize.width - settings.gameContainerSize.width + 5, settings.gameContainerSize.height - 5)
         },
-        changeDirections: function (key) {
-            if (key == 'ArrowLeft' && settings.snake.actualDirection == 'ArrowRight'
-                || key == 'ArrowRight' && settings.snake.actualDirection == 'ArrowLeft') {
-                return 0
-            } else if (key == 'ArrowUp' && settings.snake.actualDirection == 'ArrowDown'
-                || key == 'ArrowDown' && settings.snake.actualDirection == 'ArrowUp') {
-                return 0;
-            }
+        keys: {
+            delay: false,
+            attachDelay: function(time){
+                const that = this;
+                this.delay = true;
+                setTimeout(function(){
+                    that.delay = false;
+                }, time);
+            },
+            setSnakeDirection: function () {
+                switch (settings.snake.actualDirection) {
+                    case 'ArrowLeft':
+                        settings.snake.position.x -= settings.snake.stats.height;
+                        break;
+                    case 'ArrowRight':
+                        settings.snake.position.x += settings.snake.stats.height;
+                        break;
+                    case 'ArrowUp':
+                        settings.snake.position.y -= settings.snake.stats.height;
+                        break;
+                    case 'ArrowDown':
+                        settings.snake.position.y += settings.snake.stats.height;
+                        break;
+                }
+            },
+            onClickLimiter: function (key) {
+                if (key == 'ArrowLeft' && settings.snake.actualDirection == 'ArrowRight'
+                    || key == 'ArrowRight' && settings.snake.actualDirection == 'ArrowLeft') {
+                    return 0
+                } else if (key == 'ArrowUp' && settings.snake.actualDirection == 'ArrowDown'
+                    || key == 'ArrowDown' && settings.snake.actualDirection == 'ArrowUp') {
+                    return 0;
+                } else if(this.delay){
+                    return 0;
+                }
 
-            settings.snake.actualDirection = key;
-            return true;
+                this.attachDelay(settings.frameLimit + 30); //a bit longer
+                settings.snake.actualDirection = key;
+                return true;
+            }
         },
         edgeOfScreen: {
             horizontal: function () {
                 if (settings.snake.position.x >= settings.gameContainerSize.width || settings.snake.position.x == -settings.snake.stats.width) {
+                    settings.gameplay.keys.attachDelay(settings.frameLimit); //prevent direction changing after switching sides
                     switch (settings.snake.position.x) {
-                        case settings.gameContainerSize.width + settings.snake.stats.height:
+                        case (settings.gameContainerSize.width + settings.snake.stats.width) - 25:
                             settings.snake.position.x = 0;
                             break;
                         case -settings.snake.stats.width:
@@ -44,12 +74,13 @@ settings = {
             },
             vertical: function () {
                 if (settings.snake.position.y >= settings.gameContainerSize.height || settings.snake.position.y == -settings.snake.stats.height) {
+                    settings.gameplay.keys.attachDelay(settings.frameLimit); //prevent direction changing after switching sides
                     switch (settings.snake.position.y) {
-                        case -settings.snake.stats.height:
-                            settings.snake.position.y = settings.gameContainerSize.height + settings.snake.stats.height;
-                            break;
-                        case settings.gameContainerSize.height + settings.snake.stats.height:
+                        case (settings.gameContainerSize.height + settings.snake.stats.height) - 25:
                             settings.snake.position.y = 0;
+                            break;
+                        case -settings.snake.stats.height:
+                            settings.snake.position.y = settings.gameContainerSize.height;
                             break;
                     }
                 }
@@ -64,10 +95,10 @@ settings = {
             const lastEl = settings.tail.positions[settings.tail.positions.length - 1]
 
             //undraw effect
-            setInterval(function(){
-                if(!lastEl){
+            setInterval(function () {
+                if (!lastEl) {
                     location.reload()
-                }else{
+                } else {
                     settings.tail.object.clearRect(lastEl[0], lastEl[1], settings.snake.stats.height, settings.snake.stats.width);
                     settings.tail.positions.pop();
                 }
@@ -75,8 +106,8 @@ settings = {
 
         },
         startGame: function () {
-            this.drawScoreCounter();
             this.edgeOfScreen.check();
+            this.drawScoreCounter();
             settings.score.init();
         }
     },
@@ -145,26 +176,26 @@ settings = {
             y: {}
         },
         size: {
-            height: 5,
-            width: 5,
+            height: 4,
+            width: 4,
         },
         rollPosition: function () {
-            const width = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.width-25) - 0)/25)*25) + 0 )
-            const height = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.height-25) - 0)/25)*25) + 0 )
+            const width = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.width - 25) - 0) / 25) * 25) + 0)
+            const height = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.height - 25) - 0) / 25) * 25) + 0)
 
             return [width, height]
         },
-        checkIfSnakeIsThere: function(x, y){
+        checkIfSnakeIsThere: function (x, y) {
             if (settings.tail.positions.indexOf(`${x}, ${y}`) > -1) {
                 console.log('reroll')
                 return true;
             };
         },
         checkIfScored: function () {
-            if (this.actualPosition.x < settings.snake.position.x + settings.snake.stats.width &&
-                this.actualPosition.x + 4*this.size.width > settings.snake.position.x &&
-                this.actualPosition.y < settings.snake.position.y + settings.snake.stats.height &&
-                this.actualPosition.y + 4*this.size.height > settings.snake.position.y) {
+            if (this.actualPosition.x < 2+settings.snake.position.x + settings.snake.stats.width &&
+                this.actualPosition.x + this.size.width > settings.snake.position.x &&
+                this.actualPosition.y < 2+settings.snake.position.y + settings.snake.stats.height &&
+                this.actualPosition.y + this.size.height > settings.snake.position.y) {
 
                 this.goal();
                 this.clear();
@@ -176,11 +207,11 @@ settings = {
             settings.gameplay.drawScoreCounter();
         },
         clear: function () {
-            this.pixel.clearRect(this.actualPosition.x - 2*this.size.width, this.actualPosition.y - 2*this.size.height, 4*this.size.width, 4*this.size.height)
+            this.pixel.clearRect(this.actualPosition.x - 2 * this.size.width, this.actualPosition.y - 2 * this.size.height, 4 * this.size.width, 4 * this.size.height)
         },
         draw: function () {
             if (this.pixelPoint == settings.snake.stats.points) return 0;
-            
+
             this.pixelPoint++;
             const roll = {
                 x: this.rollPosition()[0],
@@ -190,14 +221,13 @@ settings = {
             this.actualPosition.x = roll.x
             this.actualPosition.y = roll.y
 
-            console.log(this.actualPosition)
-            if (this.checkIfSnakeIsThere(this.actualPosition.x, this.actualPosition.y )) return 0;
+            if (this.checkIfSnakeIsThere(this.actualPosition.x, this.actualPosition.y)) return this.draw();
 
             this.pixel.beginPath();
-            this.pixel.rect(roll.x+this.size.height, roll.y, this.size.height, this.size.width)
-            this.pixel.rect(roll.x-this.size.height, roll.y, this.size.height, this.size.width)
-            this.pixel.rect(roll.x, roll.y+this.size.width, this.size.height, this.size.width)
-            this.pixel.rect(roll.x, roll.y-this.size.width, this.size.height, this.size.width)
+            this.pixel.rect(roll.x + this.size.height, roll.y, this.size.height, this.size.width)
+            this.pixel.rect(roll.x - this.size.height, roll.y, this.size.height, this.size.width)
+            this.pixel.rect(roll.x, roll.y + this.size.width, this.size.height, this.size.width)
+            this.pixel.rect(roll.x, roll.y - this.size.width, this.size.height, this.size.width)
             this.pixel.closePath();
             this.pixel.fill();
         },
@@ -222,8 +252,8 @@ settings = {
             settings.gameStatus = 'menu';
             settings.gameplay.startScreen.drawImage(document.getElementById('startImg'), 60, 0, 800, 450, 0, 0, 800, 600);
             document.addEventListener('keydown', function ({ key }) {
-                if (settings.allowedKeys.includes(key) && settings.gameplay.changeDirections(key) && settings.gameStatus != 'game') {
-                    settings.gameplay.startScreen.clearRect(0,0,800,600)
+                if (settings.allowedKeys.includes(key) && settings.gameplay.keys.onClickLimiter(key) && settings.gameStatus != 'game') {
+                    settings.gameplay.startScreen.clearRect(0, 0, 800, 600)
                     settings.init.game();
                 }
             })
@@ -233,26 +263,11 @@ settings = {
             settings.gameplay.startGame()
 
             setTimeout(function () {
-                    settings.snake.clear();
-                    settings.tail.draw();
-                    settings.tail.collision();
-
-                    switch (settings.snake.actualDirection) {
-                        case 'ArrowLeft':
-                            settings.snake.position.x -= settings.snake.stats.height;
-                            break;
-                        case 'ArrowRight':
-                            settings.snake.position.x += settings.snake.stats.height;
-                            break;
-                        case 'ArrowUp':
-                            settings.snake.position.y -= settings.snake.stats.height;
-                            break;
-                        case 'ArrowDown':
-                            settings.snake.position.y += settings.snake.stats.height;
-                            break;
-                    }
-                    settings.snake.draw();
-
+                settings.snake.clear();                                         //clear last position of snake header
+                settings.tail.draw();                                           //if there's a tail, move it
+                settings.tail.collision();                                      //check, if snake didn't cut hitself
+                settings.gameplay.keys.setSnakeDirection(settings.snake.actualDirection); //if clicked, change the position
+                settings.snake.draw();                                          //move snake, if previous function is not called, use the same as previous position
                 requestAnimationFrame(settings.init.game)
 
             }, 10000 / settings.framelimit);
