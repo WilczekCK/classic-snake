@@ -1,6 +1,6 @@
 var settings = settings | {};
 settings = {
-    framelimit: 120,
+    framelimit: 240,
     gameStatus: '',
     gameContainer: document.getElementById('gameScreen'),
     gameContainerSize: {
@@ -135,6 +135,10 @@ settings = {
         },
     },
 
+    addons:{
+
+    },
+
     tail: {
         object: {},
         positions: ["0, 0"],
@@ -149,7 +153,7 @@ settings = {
             if (settings.snake.stats.points) {
                 this.clear();
                 this.object.beginPath();
-                this.object.rect(this.lastSnakePosition().x, this.lastSnakePosition().y, settings.snake.stats.width, settings.snake.stats.height)
+                this.object.rect(this.lastSnakePosition().x, this.lastSnakePosition().y+10, settings.snake.stats.width/2, settings.snake.stats.height/2)
                 this.object.closePath();
                 this.object.fill();
             }
@@ -158,7 +162,7 @@ settings = {
             const lastTabEl = this.positions[this.positions.length - 1].split(", ");
 
             if (lastTabEl) {
-                this.object.clearRect(lastTabEl[0], lastTabEl[1], settings.snake.stats.height, settings.snake.stats.width)
+                this.object.clearRect(lastTabEl[0], (lastTabEl[1]), settings.snake.stats.height, settings.snake.stats.width,)
             }
         },
         collision: function () {
@@ -212,17 +216,18 @@ settings = {
         draw: function () {
             if (this.pixelPoint == settings.snake.stats.points) return 0;
 
-            this.pixelPoint++;
+            
             const roll = {
                 x: this.rollPosition()[0],
                 y: this.rollPosition()[1],
             }
-
             this.actualPosition.x = roll.x
             this.actualPosition.y = roll.y
 
             if (this.checkIfSnakeIsThere(this.actualPosition.x, this.actualPosition.y)) return this.draw();
-
+            console.log(this.actualPosition)
+            
+            this.pixelPoint++;
             this.pixel.beginPath();
             this.pixel.rect(roll.x + this.size.height, roll.y, this.size.height, this.size.width)
             this.pixel.rect(roll.x - this.size.height, roll.y, this.size.height, this.size.width)
