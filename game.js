@@ -19,10 +19,10 @@ settings = {
         },
         keys: {
             delay: false,
-            attachDelay: function(time){
+            attachDelay: function (time) {
                 const that = this;
                 this.delay = true;
-                setTimeout(function(){
+                setTimeout(function () {
                     that.delay = false;
                 }, time);
             },
@@ -49,7 +49,7 @@ settings = {
                 } else if (key == 'ArrowUp' && settings.snake.actualDirection == 'ArrowDown'
                     || key == 'ArrowDown' && settings.snake.actualDirection == 'ArrowUp') {
                     return 0;
-                } else if(this.delay){
+                } else if (this.delay) {
                     return 0;
                 }
 
@@ -57,6 +57,12 @@ settings = {
                 settings.snake.actualDirection = key;
                 return true;
             }
+        },
+        rollPosition: function () {
+            const width = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.width - 25) - 0) / 25) * 25) + 0)
+            const height = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.height - 25) - 0) / 25) * 25) + 0)
+
+            return [width, height]
         },
         edgeOfScreen: {
             horizontal: function () {
@@ -109,6 +115,7 @@ settings = {
             this.edgeOfScreen.check();
             this.drawScoreCounter();
             settings.score.init();
+            settings.addons.turtle.init();
         }
     },
 
@@ -133,10 +140,85 @@ settings = {
         clear: function () {
             settings.snake.player.clearRect(this.position.x, this.position.y, this.stats.width, this.stats.height)
         },
+        checkIfSnakeIsThere: function (x, y) {
+            if (settings.tail.positions.indexOf(`${x}, ${y}`) > -1) {
+                console.log('reroll')
+                return true;
+            };
+        },
     },
 
-    addons:{
+    addons: {
+        turtle: {
+            object: {},
+            rolledPosition: {
+                x: 0,
+                y: 0
+            },
+            size: {
+                width: 20,
+                height: 10,
+            },
+            appearedOn: [],
+            isDrawn: false,
+            draw: function () {
+                if (settings.snake.stats.points % 6 == 0 && !this.isDrawn
+                    && settings.snake.stats.points > 1 && !this.appearedOn.includes(settings.snake.stats.points)) {
 
+                    this.isDrawn = true;
+                    this.appearedOn.push(settings.snake.stats.points);
+                    this.rolledPosition.x = settings.gameplay.rollPosition()[0]
+                    this.rolledPosition.y = settings.gameplay.rollPosition()[1]
+
+                    //3px is a one dot ;)
+                    this.object.beginPath();
+
+                    this.object.rect(this.rolledPosition.x + 9, this.rolledPosition.y - 6, 3, 3)
+                    this.object.rect(this.rolledPosition.x + 6, this.rolledPosition.y - 3, 9, 3)
+                    this.object.rect(this.rolledPosition.x, this.rolledPosition.y, 18, 3)
+                    //body
+
+                    this.object.rect(this.rolledPosition.x + 6, this.rolledPosition.y + 3, 3, 3)
+                    this.object.rect(this.rolledPosition.x + 12, this.rolledPosition.y + 3, 3, 3)
+                    //legs
+
+                    this.object.rect(this.rolledPosition.x - 3, this.rolledPosition.y - 6, 6, 6)
+                    this.object.rect(this.rolledPosition.x - 3, this.rolledPosition.y - 6, 6, 6)
+                    //head
+
+
+                    this.object.closePath();
+                    this.object.fill();
+                }
+            },
+            clear: function () {
+                this.object.clearRect(this.rolledPosition.x - 3, this.rolledPosition.y - 6, this.size.width + 12, this.size.height + 6)
+            },
+            collision: function () {
+                if (this.rolledPosition.x - 3 < settings.snake.position.x + settings.snake.stats.width &&
+                    this.rolledPosition.x - 3 + this.size.width > settings.snake.position.x &&
+                    this.rolledPosition.y - 6 < settings.snake.position.y + settings.snake.stats.height &&
+                    this.rolledPosition.y - 6 + this.size.height > settings.snake.position.y && this.isDrawn == true) {
+                    console.log('slooooow')
+
+                    this.clear();
+                    this.effect();
+                }
+            },
+            effect: function () {
+                const properFPS = settings.framelimit;
+                settings.framelimit = settings.framelimit / 2;
+                this.isDrawn = false;
+
+                setTimeout(function () {
+                    settings.framelimit = properFPS;
+                }, 5000)
+            },
+            init: function () {
+                this.draw();
+                this.collision();
+            },
+        }
     },
 
     tail: {
@@ -153,7 +235,7 @@ settings = {
             if (settings.snake.stats.points) {
                 this.clear();
                 this.object.beginPath();
-                this.object.rect(this.lastSnakePosition().x, this.lastSnakePosition().y+10, settings.snake.stats.width/2, settings.snake.stats.height/2)
+                this.object.rect(this.lastSnakePosition().x, this.lastSnakePosition().y + 10, settings.snake.stats.width / 2, settings.snake.stats.height / 2)
                 this.object.closePath();
                 this.object.fill();
             }
@@ -162,7 +244,7 @@ settings = {
             const lastTabEl = this.positions[this.positions.length - 1].split(", ");
 
             if (lastTabEl) {
-                this.object.clearRect(lastTabEl[0], (lastTabEl[1]), settings.snake.stats.height, settings.snake.stats.width,)
+                this.object.clearRect(lastTabEl[0], (lastTabEl[1]), settings.snake.stats.height, settings.snake.stats.width)
             }
         },
         collision: function () {
@@ -183,22 +265,10 @@ settings = {
             height: 4,
             width: 4,
         },
-        rollPosition: function () {
-            const width = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.width - 25) - 0) / 25) * 25) + 0)
-            const height = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.height - 25) - 0) / 25) * 25) + 0)
-
-            return [width, height]
-        },
-        checkIfSnakeIsThere: function (x, y) {
-            if (settings.tail.positions.indexOf(`${x}, ${y}`) > -1) {
-                console.log('reroll')
-                return true;
-            };
-        },
         checkIfScored: function () {
-            if (this.actualPosition.x < 2+settings.snake.position.x + settings.snake.stats.width &&
+            if (this.actualPosition.x < 2 + settings.snake.position.x + settings.snake.stats.width &&
                 this.actualPosition.x + this.size.width > settings.snake.position.x &&
-                this.actualPosition.y < 2+settings.snake.position.y + settings.snake.stats.height &&
+                this.actualPosition.y < 2 + settings.snake.position.y + settings.snake.stats.height &&
                 this.actualPosition.y + this.size.height > settings.snake.position.y) {
 
                 this.goal();
@@ -216,17 +286,17 @@ settings = {
         draw: function () {
             if (this.pixelPoint == settings.snake.stats.points) return 0;
 
-            
+
             const roll = {
-                x: this.rollPosition()[0],
-                y: this.rollPosition()[1],
+                x: settings.gameplay.rollPosition()[0],
+                y: settings.gameplay.rollPosition()[1],
             }
             this.actualPosition.x = roll.x
             this.actualPosition.y = roll.y
 
-            if (this.checkIfSnakeIsThere(this.actualPosition.x, this.actualPosition.y)) return this.draw();
+            if (settings.snake.checkIfSnakeIsThere(this.actualPosition.x, this.actualPosition.y)) return this.draw();
             console.log(this.actualPosition)
-            
+
             this.pixelPoint++;
             this.pixel.beginPath();
             this.pixel.rect(roll.x + this.size.height, roll.y, this.size.height, this.size.width)
@@ -247,6 +317,7 @@ settings = {
             settings.gameStatus = 'config';
             const canvas = settings.gameContainer;
             settings.snake.player = canvas.getContext("2d");
+            settings.addons.turtle.object = canvas.getContext("2d");
             settings.score.pixel = canvas.getContext("2d");
             settings.tail.object = canvas.getContext("2d");
             settings.gameplay.scoreCounter = canvas.getContext("2d");
