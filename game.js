@@ -1,6 +1,6 @@
 var settings = settings | {};
 settings = {
-    framelimit: 240,
+    framelimit: 120,
     gameStatus: '',
     gameContainer: document.getElementById('gameScreen'),
     gameContainerSize: {
@@ -53,7 +53,7 @@ settings = {
                     return 0;
                 }
 
-                this.attachDelay(settings.frameLimit + 30); //a bit longer
+                this.attachDelay(settings.framelimit*2);
                 settings.snake.actualDirection = key;
                 return true;
             }
@@ -116,6 +116,7 @@ settings = {
             this.drawScoreCounter();
             settings.score.init();
             settings.addons.turtle.init();
+            settings.addons.apple.init();
         }
     },
 
@@ -199,7 +200,6 @@ settings = {
                     this.rolledPosition.x - 3 + this.size.width > settings.snake.position.x &&
                     this.rolledPosition.y - 6 < settings.snake.position.y + settings.snake.stats.height &&
                     this.rolledPosition.y - 6 + this.size.height > settings.snake.position.y && this.isDrawn == true) {
-                    console.log('slooooow')
 
                     this.clear();
                     this.effect();
@@ -208,6 +208,72 @@ settings = {
             effect: function () {
                 const properFPS = settings.framelimit;
                 settings.framelimit = settings.framelimit / 2;
+                this.isDrawn = false;
+
+                setTimeout(function () {
+                    settings.framelimit = properFPS;
+                }, 5000)
+            },
+            init: function () {
+                this.draw();
+                this.collision();
+            },
+        },
+        apple: {
+            object: {},
+            rolledPosition: {
+                x: 0,
+                y: 0
+            },
+            size: {
+                width: 20,
+                height: 10,
+            },
+            appearedOn: [],
+            isDrawn: false,
+            draw: function () {
+                if (settings.snake.stats.points % 4 == 0 && !this.isDrawn
+                    && settings.snake.stats.points > 1 && !this.appearedOn.includes(settings.snake.stats.points)) {
+
+                    this.isDrawn = true;
+                    this.appearedOn.push(settings.snake.stats.points);
+                    this.rolledPosition.x = settings.gameplay.rollPosition()[0]
+                    this.rolledPosition.y = settings.gameplay.rollPosition()[1]
+
+                    //3px is a one dot ;)
+                    this.object.beginPath();
+
+                    this.object.rect(this.rolledPosition.x+1.5, this.rolledPosition.y - 12, 6, 3)
+                    this.object.rect(this.rolledPosition.x+1.5, this.rolledPosition.y - 6, 3, 6)
+                    //leaf
+
+                    this.object.rect(this.rolledPosition.x, this.rolledPosition.y - 3, 6, 3)
+                    this.object.rect(this.rolledPosition.x - 3, this.rolledPosition.y, 12, 6)
+                    this.object.rect(this.rolledPosition.x, this.rolledPosition.y + 6, 6, 3)
+                    //body
+
+                    this.object.closePath();
+                    this.object.fill();
+
+                    console.log('DRAWN')
+                }
+            },
+            clear: function () {
+                this.object.clearRect(this.rolledPosition.x - 3, this.rolledPosition.y - 6, this.size.width + 12, this.size.height + 6)
+            },
+            collision: function () {
+                if (this.rolledPosition.x - 3 < settings.snake.position.x + settings.snake.stats.width &&
+                    this.rolledPosition.x - 3 + this.size.width > settings.snake.position.x &&
+                    this.rolledPosition.y - 6 < settings.snake.position.y + settings.snake.stats.height &&
+                    this.rolledPosition.y - 6 + this.size.height > settings.snake.position.y && this.isDrawn == true) {
+
+                    this.clear();
+                    this.effect();
+                }
+            },
+            effect: function () {
+                const properFPS = settings.framelimit;
+                settings.framelimit = settings.framelimit + settings.framelimit / 2;
                 this.isDrawn = false;
 
                 setTimeout(function () {
@@ -318,6 +384,7 @@ settings = {
             const canvas = settings.gameContainer;
             settings.snake.player = canvas.getContext("2d");
             settings.addons.turtle.object = canvas.getContext("2d");
+            settings.addons.apple.object = canvas.getContext("2d");
             settings.score.pixel = canvas.getContext("2d");
             settings.tail.object = canvas.getContext("2d");
             settings.gameplay.scoreCounter = canvas.getContext("2d");
