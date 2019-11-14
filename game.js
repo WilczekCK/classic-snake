@@ -1,6 +1,7 @@
 var settings = settings | {};
 settings = {
-    framelimit: 120,
+    baseFramelimit: 120,
+    actualFramelimit: 120,
     gameStatus: '',
     gameContainer: document.getElementById('gameScreen'),
     gameContainerSize: {
@@ -53,7 +54,7 @@ settings = {
                     return 0;
                 }
 
-                this.attachDelay(settings.framelimit*2);
+                this.attachDelay(settings.actualFramelimit + 25);
                 settings.snake.actualDirection = key;
                 return true;
             }
@@ -67,7 +68,7 @@ settings = {
         edgeOfScreen: {
             horizontal: function () {
                 if (settings.snake.position.x >= settings.gameContainerSize.width || settings.snake.position.x == -settings.snake.stats.width) {
-                    settings.gameplay.keys.attachDelay(settings.frameLimit); //prevent direction changing after switching sides
+                    settings.gameplay.keys.attachDelay(settings.actualFramelimit / 4); //prevent direction changing after switching sides
                     switch (settings.snake.position.x) {
                         case (settings.gameContainerSize.width + settings.snake.stats.width) - 25:
                             settings.snake.position.x = 0;
@@ -80,7 +81,7 @@ settings = {
             },
             vertical: function () {
                 if (settings.snake.position.y >= settings.gameContainerSize.height || settings.snake.position.y == -settings.snake.stats.height) {
-                    settings.gameplay.keys.attachDelay(settings.frameLimit); //prevent direction changing after switching sides
+                    settings.gameplay.keys.attachDelay(settings.actualFramelimit / 4); //prevent direction changing after switching sides
                     switch (settings.snake.position.y) {
                         case (settings.gameContainerSize.height + settings.snake.stats.height) - 25:
                             settings.snake.position.y = 0;
@@ -206,12 +207,13 @@ settings = {
                 }
             },
             effect: function () {
-                const properFPS = settings.framelimit;
-                settings.framelimit = settings.framelimit / 2;
+                const properFPS = settings.baseFramelimit;
+                settings.actualFramelimit = settings.baseFramelimit / 2;
                 this.isDrawn = false;
 
                 setTimeout(function () {
-                    settings.framelimit = properFPS;
+                    settings.actualFramelimit = properFPS;
+                    settings.baseFramelimit = settings.baseFramelimit + 5;
                 }, 5000)
             },
             init: function () {
@@ -259,7 +261,7 @@ settings = {
                 }
             },
             clear: function () {
-                this.object.clearRect(this.rolledPosition.x - 3, this.rolledPosition.y - 6, this.size.width + 12, this.size.height + 6)
+                this.object.clearRect(this.rolledPosition.x - 3, this.rolledPosition.y - 12, this.size.width + 12, this.size.height + 6)
             },
             collision: function () {
                 if (this.rolledPosition.x - 3 < settings.snake.position.x + settings.snake.stats.width &&
@@ -272,12 +274,13 @@ settings = {
                 }
             },
             effect: function () {
-                const properFPS = settings.framelimit;
-                settings.framelimit = settings.framelimit + settings.framelimit / 2;
+                const properFPS = settings.baseFramelimit;
+                settings.actualFramelimit = settings.baseFramelimit + settings.actualFramelimit / 2;
                 this.isDrawn = false;
 
                 setTimeout(function () {
-                    settings.framelimit = properFPS;
+                    settings.actualFramelimit = properFPS;
+                    settings.baseFramelimit = settings.baseFramelimit + 5;
                 }, 5000)
             },
             init: function () {
@@ -393,7 +396,7 @@ settings = {
         },
         menu: function () {
             settings.gameStatus = 'menu';
-            settings.gameplay.startScreen.drawImage(document.getElementById('startImg'), 60, 0, 800, 450, 0, 0, 800, 600);
+            settings.gameplay.startScreen.drawImage(document.getElementById('startImg'), 60, 0, 1200, 750, 0, 0, 800, 600);
             document.addEventListener('keydown', function ({ key }) {
                 if (settings.allowedKeys.includes(key) && settings.gameplay.keys.onClickLimiter(key) && settings.gameStatus != 'game') {
                     settings.gameplay.startScreen.clearRect(0, 0, 800, 600)
@@ -413,7 +416,7 @@ settings = {
                 settings.snake.draw();                                          //move snake, if previous function is not called, use the same as previous position
                 requestAnimationFrame(settings.init.game)
 
-            }, 10000 / settings.framelimit);
+            }, 10000 / settings.actualFramelimit);
         }
     }
 }
