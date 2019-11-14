@@ -54,42 +54,30 @@ settings = {
                     return 0;
                 }
 
-                this.attachDelay(settings.actualFramelimit + 25);
+                this.attachDelay();
                 settings.snake.actualDirection = key;
                 return true;
             }
         },
         rollPosition: function () {
-            const width = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.width - 25) - 0) / 25) * 25) + 0)
-            const height = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.height - 25) - 0) / 25) * 25) + 0)
+            const width = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.width - settings.snake.stats.width) - 0) / settings.snake.stats.width) * settings.snake.stats.width) + 0)
+            const height = (Math.floor(Math.ceil(Math.random() * ((settings.gameContainerSize.height - settings.snake.stats.width) - 0) / settings.snake.stats.width) * settings.snake.stats.width) + 0)
 
             return [width, height]
         },
         edgeOfScreen: {
             horizontal: function () {
-                if (settings.snake.position.x >= settings.gameContainerSize.width || settings.snake.position.x == -settings.snake.stats.width) {
-                    settings.gameplay.keys.attachDelay(settings.actualFramelimit / 4); //prevent direction changing after switching sides
-                    switch (settings.snake.position.x) {
-                        case (settings.gameContainerSize.width + settings.snake.stats.width) - 25:
-                            settings.snake.position.x = 0;
-                            break;
-                        case -settings.snake.stats.width:
-                            settings.snake.position.x = settings.gameContainerSize.width;
-                            break;
-                    }
+                if (settings.gameContainerSize.width <= settings.snake.position.x) {
+                    settings.snake.position.x = 0;
+                }else if(settings.snake.position.x <= -settings.snake.stats.width){
+                    settings.snake.position.x = settings.gameContainerSize.width;   
                 }
             },
             vertical: function () {
-                if (settings.snake.position.y >= settings.gameContainerSize.height || settings.snake.position.y == -settings.snake.stats.height) {
-                    settings.gameplay.keys.attachDelay(settings.actualFramelimit / 4); //prevent direction changing after switching sides
-                    switch (settings.snake.position.y) {
-                        case (settings.gameContainerSize.height + settings.snake.stats.height) - 25:
-                            settings.snake.position.y = 0;
-                            break;
-                        case -settings.snake.stats.height:
-                            settings.snake.position.y = settings.gameContainerSize.height;
-                            break;
-                    }
+                if(settings.gameContainerSize.height <= settings.snake.position.y){
+                    settings.snake.position.y = 0;
+                }else if(settings.snake.position.y <= -settings.snake.stats.height){
+                    settings.snake.position.y = settings.gameContainerSize.height;
                 }
             },
             check: function () {
@@ -126,8 +114,8 @@ settings = {
         player: {},
         stats: {
             points: 1,
-            height: 25,
-            width: 25
+            height: 30,
+            width: 30
         },
         position: {
             x: 0,
@@ -261,11 +249,11 @@ settings = {
                 }
             },
             clear: function () {
-                this.object.clearRect(this.rolledPosition.x - 3, this.rolledPosition.y - 12, this.size.width + 12, this.size.height + 6)
+                this.object.clearRect(this.rolledPosition.x - 3, this.rolledPosition.y - 12, this.size.width + 12, this.size.height + 12)
             },
             collision: function () {
-                if (this.rolledPosition.x - 3 < settings.snake.position.x + settings.snake.stats.width &&
-                    this.rolledPosition.x - 3 + this.size.width > settings.snake.position.x &&
+                if (this.rolledPosition.x - 6 < settings.snake.position.x + settings.snake.stats.width &&
+                    this.rolledPosition.x - 6 + this.size.width > settings.snake.position.x &&
                     this.rolledPosition.y - 6 < settings.snake.position.y + settings.snake.stats.height &&
                     this.rolledPosition.y - 6 + this.size.height > settings.snake.position.y && this.isDrawn == true) {
 
@@ -302,9 +290,10 @@ settings = {
         },
         draw: function () {
             if (settings.snake.stats.points) {
+                var that = this;
                 this.clear();
                 this.object.beginPath();
-                this.object.rect(this.lastSnakePosition().x, this.lastSnakePosition().y + 10, settings.snake.stats.width / 2, settings.snake.stats.height / 2)
+                that.object.rect(that.lastSnakePosition().x + 6.66, that.lastSnakePosition().y + 6.66, settings.snake.stats.width / 2, settings.snake.stats.height / 2)
                 this.object.closePath();
                 this.object.fill();
             }
